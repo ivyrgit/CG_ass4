@@ -6,12 +6,14 @@ function animate() {
     camera.getWorldDirection(direction);
     right.crossVectors(direction, camera.up).normalize();
 
-    if (moveState.forward) camera.position.addScaledVector(direction, moveSpeed);
-    if (moveState.backward) camera.position.addScaledVector(direction, -moveSpeed);
-    if (moveState.left) camera.position.addScaledVector(right, -moveSpeed);
-    if (moveState.right) camera.position.addScaledVector(right, moveSpeed);
-    if (moveState.up) camera.position.y += moveSpeed;
-    if (moveState.down) camera.position.y -= moveSpeed;
+    // if (moveState.forward) camera.position.addScaledVector(direction, moveSpeed);
+    // if (moveState.backward) camera.position.addScaledVector(direction, -moveSpeed);
+    // if (moveState.left) camera.position.addScaledVector(right, -moveSpeed);
+    // if (moveState.right) camera.position.addScaledVector(right, moveSpeed);
+    // if (moveState.up) camera.position.y += moveSpeed;
+    // if (moveState.down) camera.position.y -= moveSpeed;
+    
+    camera.position.addScaledVector(direction, moveSpeed);
 
     renderer.render(scene, camera);
 }
