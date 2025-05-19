@@ -1,43 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="js/three.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/PLYLoader.js"></script>
+    <link rel="stylesheet" href="css/layout.css" />
+    <title>3.1</title>
+</head>
+<body>
+    <div id="sliderContainer">
+        <label>testslider1
+            <input type="range" id="zPositionSlider" min="-25" max="25" value="0" />
+        </label>
+        <label>testslider2
+            <input type="range" id="spawnSpeedSlider" min="100" max="2000" value="500" />
+        </label>
+        <label>press v to lock/unlock cursor</label>
+    </div>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="js/three.js"></script>
-        <script src="js/OrbitControls.js"> </script>
-        <script src="js/PLYLoader.js"> </script>
-        <link rel="stylesheet" href="css/layout.css">
-        <title>3.1</title>
-    </head>
-
-    <body>
-        <div id="sliderContainer">
-            <label>testslider1 
-                <input type="range" id="zPositionSlider" min="-25" max="25" value="0">
-            </label>
-            
-            <label>testslider2 
-                <input type="range" id="spawnSpeedSlider" min="100" max="2000" value="500">
-            </label>
-            <label>press v to lock/unlock cursor</label>
-        </div> 
-
-        <script type='x-shader/x-vertex' id='vertexShader'>
-            attribute float alpha; varying float vAlpha; void main() { vAlpha = alpha; vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 ); gl_PointSize = 2.0; gl_Position = projectionMatrix * mvPosition; }
-        </script>
-
-        <script type='x-shader/x-fragment' id='fragmentShader'>
-
-            uniform vec3 color; varying float vAlpha; void main() { gl_FragColor = vec4( color, vAlpha ); }
-        </script>
-
-        <script src="mainscripts/setup.js"></script>
-        <script src="mainscripts/build.js"></script>
-        <script src="mainscripts/animate.js"></script>
-        <script src="mainscripts/run.js"></script>
-        
-    </body>
-
+    <script src="mainscripts/terrain.js"></script>
+    <script src="mainscripts/setup.js"></script>
+    <!-- <script src="mainscripts/build.js"></script> -->
+    <script src="mainscripts/animate.js"></script>
+    <script src="mainscripts/run.js"></script>
+</body>
 </html>

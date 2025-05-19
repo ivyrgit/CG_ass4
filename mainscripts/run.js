@@ -1,3 +1,5 @@
+console.log("Starting run.js...");
+
 setScene();
 setLight();
 animate();
