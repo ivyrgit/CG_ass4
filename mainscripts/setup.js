@@ -39,7 +39,7 @@ function loadGliderModel() {
         geometry.computeVertexNormals();
 
         const material = new THREE.MeshStandardMaterial({
-            color: 0xff4444,
+            color: 0x052F2D,
             flatShading: false,
             side: THREE.DoubleSide
         });
@@ -51,6 +51,8 @@ function loadGliderModel() {
 
         camera.add(gliderMesh);
         scene.add(camera);
+        createBackgroundMountains();
+
     });
 }
 
@@ -91,13 +93,16 @@ document.addEventListener('mousemove', (event) => {
     if (!isPointerLocked) return;
 
     const sensitivity = 0.002;
-    yaw -= event.movementX * sensitivity;
-    pitch -= event.movementY * sensitivity;
-    pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
 
-    const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, yaw, 0, 'YXZ'));
+    // only apply pitch- ignore yaw
+    pitch -= event.movementY * sensitivity;
+    pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // Clamp pitch
+
+    // lock yaw to 0 (looking straight forward)
+    const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, 0, 0, 'YXZ'));
     camera.quaternion.copy(quat);
 });
+
 
 window.addEventListener('keydown', (event) => {
     const key = event.key.toLowerCase();
@@ -108,6 +113,42 @@ window.addEventListener('keyup', (event) => {
     const key = event.key.toLowerCase();
     if (key in moveState) moveState[key] = false;
 });
+
+function createBackgroundMountains() {
+    const width = 100;
+    const height = 30;
+    const segments = 50;
+
+    const mountainGeo = new THREE.PlaneGeometry(width, height, segments, 1);
+    mountainGeo.rotateY(Math.PI);
+
+    //mountain silhouette
+    const pos = mountainGeo.attributes.position;
+    for (let i = 0; i <= segments; i++) {
+        const y = Math.sin(i * 0.5) * 5 + Math.random() * 3 + 10;
+        pos.setY(i, y);
+    }
+    pos.needsUpdate = true;
+
+    const mountainMat = new THREE.MeshBasicMaterial({
+        color: 0x44A682,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.7,
+        depthWrite: false
+    });
+
+    const mountainMesh = new THREE.Mesh(mountainGeo, mountainMat);
+
+    // Push it back and scale it up to keep the same visual impact
+    mountainMesh.position.set(0, -15, -250);  // farther Z
+    mountainMesh.scale.set(10, 5, 1);         // scale compensates for distance
+
+    camera.add(mountainMesh);
+}
+
+
+
 
 window.setScene = setScene;
 window.setLight = setLight;
