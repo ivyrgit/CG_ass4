@@ -36,7 +36,10 @@ function createTerrainChunk(xOffset, zOffset) {
 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(xOffset, -15, zOffset);
+    addTreesToChunk(mesh, Math.floor(Math.random() * 4) + 2);
+    console.log("girl heeeelp");
     return mesh;
+    
 }
 
 function applyHeightMap(geometry, xOffset, zOffset) {
@@ -67,12 +70,14 @@ function updateTerrain(camera) {
         const xOffset = chunk.xOffset;
 
         // if chunk is far behind the camera, recycle it forward
-        if (cameraZ - mesh.position.z < -terrainChunkSize * 1.5) {
+        if (cameraZ - mesh.position.z < -terrainChunkSize * 0.5) {
             const newZ = lastChunkZByStrip[xOffset] - terrainChunkSize;
             mesh.position.z = newZ;
             applyHeightMap(mesh.geometry, xOffset, newZ);
 
             lastChunkZByStrip[xOffset] = newZ;
+            addTreesToChunk(mesh, Math.floor(Math.random() * 4) + 2);
+
         }
     }
 }

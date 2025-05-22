@@ -1,5 +1,3 @@
-// setup.js
-
 let scene, camera, renderer;
 let ambientLight, cameraLight;
 let gliderMesh;
@@ -22,19 +20,20 @@ function setScene() {
 
     const aspect = window.innerWidth / window.innerHeight;
     camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-    camera.position.set(0, 0, 10); // Start closer for testing
+    camera.position.set(0, 0, 10);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.shadowMap.enabled = true;
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    createTerrain(scene);
-    loadGliderModel();
+    loadModels();
 }
 
-function loadGliderModel() {
+function loadModels() {
     const loader = new THREE.PLYLoader();
+
+    // load glider
     loader.load('models/wip_hangglider.ply', (geometry) => {
         geometry.computeVertexNormals();
 
@@ -51,7 +50,29 @@ function loadGliderModel() {
 
         camera.add(gliderMesh);
         scene.add(camera);
+
         createBackgroundMountains();
+    });
+
+    // load tree
+    loader.load('models/tree.ply', (geometry) => {
+        geometry.computeVertexNormals();
+
+        if (geometry.hasAttribute('color')) {
+            geometry.getAttribute('color').normalized = true;
+
+            const material = new THREE.MeshStandardMaterial({
+                vertexColors: true,
+                flatShading: true,
+                side: THREE.DoubleSide
+            });
+
+            setTreeModel(geometry, material);
+            console.log('Tree model loaded and passed to trees.js');
+        } else {
+            console.warn('Tree model missing vertex color attribute.');
+        }
+        createTerrain(scene); // only create terrain after tree model is ready
 
     });
 }
@@ -74,7 +95,7 @@ function resizeScene() {
     camera.updateProjectionMatrix();
 }
 
-// controls--
+// controls
 function togglePointerLock() {
     isPointerLocked
         ? document.exitPointerLock()
@@ -94,15 +115,12 @@ document.addEventListener('mousemove', (event) => {
 
     const sensitivity = 0.002;
 
-    // only apply pitch- ignore yaw
     pitch -= event.movementY * sensitivity;
-    pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // Clamp pitch
+    pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
 
-    // lock yaw to 0 (looking straight forward)
     const quat = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, 0, 0, 'YXZ'));
     camera.quaternion.copy(quat);
 });
-
 
 window.addEventListener('keydown', (event) => {
     const key = event.key.toLowerCase();
@@ -122,7 +140,6 @@ function createBackgroundMountains() {
     const mountainGeo = new THREE.PlaneGeometry(width, height, segments, 1);
     mountainGeo.rotateY(Math.PI);
 
-    //mountain silhouette
     const pos = mountainGeo.attributes.position;
     for (let i = 0; i <= segments; i++) {
         const y = Math.sin(i * 0.5) * 5 + Math.random() * 3 + 10;
@@ -139,17 +156,13 @@ function createBackgroundMountains() {
     });
 
     const mountainMesh = new THREE.Mesh(mountainGeo, mountainMat);
-
-    // Push it back and scale it up to keep the same visual impact
-    mountainMesh.position.set(0, -15, -250);  // farther Z
-    mountainMesh.scale.set(10, 5, 1);         // scale compensates for distance
+    mountainMesh.position.set(0, -15, -250);
+    mountainMesh.scale.set(10, 5, 1);
 
     camera.add(mountainMesh);
 }
 
-
-
-
+// Export key pieces
 window.setScene = setScene;
 window.setLight = setLight;
 window.resizeScene = resizeScene;
