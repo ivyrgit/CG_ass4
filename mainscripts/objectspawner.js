@@ -16,7 +16,7 @@ function spawnObjectsForChunk(chunk) {
     const raycaster = new THREE.Raycaster();
     const down = new THREE.Vector3(0, -1, 0);
 
-    // Clear previously spawned objects
+    // clear previously spawned objects
     for (let i = chunk.children.length - 1; i >= 0; i--) {
         const child = chunk.children[i];
         if (child.userData && child.userData.spawnedObject) {
@@ -24,7 +24,7 @@ function spawnObjectsForChunk(chunk) {
         }
     }
 
-    // Get terrain meshes
+    // get terrain meshes
     const terrainMeshes = [];
     chunk.traverse(child => {
         if (child.isMesh && child.geometry && child.name !== "Water") {
@@ -66,7 +66,7 @@ function spawnObjectsForChunk(chunk) {
                 const yLocal = hitPoint.y - chunk.position.y;
 
                 const mesh = new THREE.Mesh(type.geometry, type.material);
-                // Allow each object type to specify an optional vertical offset
+                // inset into ground
                 const yOffset = type.options.yOffset !== undefined ? type.options.yOffset : 0.05;
                 mesh.position.set(localX, yLocal + yOffset, localZ);
 
