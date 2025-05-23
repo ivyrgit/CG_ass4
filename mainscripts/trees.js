@@ -44,6 +44,8 @@ function addTreesToChunk(chunk) {
             const hitPoint = hit.point;
 
             const tree = new THREE.Mesh(treeGeometry, treeMaterial);
+            tree.receiveShadow = true;
+            tree.castShadow = true;
             const yLocal = hitPoint.y - chunk.position.y;
 
             tree.rotation.x = -Math.PI / 2;

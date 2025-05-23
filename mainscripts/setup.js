@@ -1,8 +1,17 @@
 let scene, camera, renderer;
-let ambientLight, cameraLight;
 let gliderMesh;
 let isPointerLocked = false;
 let pitch = 0, yaw = 0;
+
+let ambientLight;
+let directionalLight;
+let spotLight;
+let stars;
+let hemiLight;
+let cameraLight;
+
+let mountainMesh;
+
 
 const moveSpeed = 0.2;
 const moveState = {
@@ -24,6 +33,8 @@ function setScene() {
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
@@ -49,7 +60,7 @@ function loadModels() {
         gliderMesh.scale.set(1, 1, 1);
 
         camera.add(gliderMesh);
-        scene.add(camera);
+        //scene.add(camera);
 
         createBackgroundMountains();
     });
@@ -75,17 +86,201 @@ function loadModels() {
         createTerrain(scene); // only create terrain after tree model is ready
 
     });
+
+    //load bushsmall
+    loader.load('models/bushsmall.ply', (geometry) => {
+    geometry.computeVertexNormals();
+    const material = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true });
+
+    registerObjectType('bushsmall', geometry, material, {
+        count: { min: 1, max: 3 },
+        randomRotationY: true,
+        baseScale: 0.7,
+        scaleVariation: 0.3
+        });
+    });
+    //load bushbig
+    loader.load('models/bushbig.ply', (geometry) => {
+    geometry.computeVertexNormals();
+    const material = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true });
+
+    registerObjectType('bushbig', geometry, material, {
+        count: { min: 1, max: 3 },
+        randomRotationY: true,
+        baseScale: 0.7,
+        scaleVariation: 0.3
+        });
+    });
+    //load treestump
+    loader.load('models/treestump.ply', (geometry) => {
+    geometry.computeVertexNormals();
+    const material = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true });
+
+    registerObjectType('treestump', geometry, material, {
+        count: { min: 1, max: 3 },
+        randomRotationY: true,
+        baseScale: 0.7,
+        scaleVariation: 0.3
+        });
+    });
+    //load mushroom
+    loader.load('models/mushroom.ply', (geometry) => {
+    geometry.computeVertexNormals();
+    const material = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true });
+
+    registerObjectType('mushroom', geometry, material, {
+        count: { min: 4, max: 8 },
+        randomRotationZ: true,
+        baseScale: 0.5,
+        yOffset: -0.3,
+        scaleVariation: 0.4
+        });
+    });
+
+
 }
 
-function setLight() {
-    cameraLight = new THREE.PointLight(0xffffff, 0.8);
-    cameraLight.castShadow = true;
-    camera.add(cameraLight);
+function setLight(mode = 'day') {
+    // remove old lights and objects
+    if (ambientLight) scene.remove(ambientLight);
+    if (directionalLight) scene.remove(directionalLight);
+    if (spotLight) scene.remove(spotLight);
+    if (stars) scene.remove(stars);
+    if (hemiLight) scene.remove(hemiLight);
+    if (cameraLight) scene.remove(cameraLight);
+    if (camera) scene.remove(camera);
+    if (spotLight?.target) scene.remove(spotLight.target);
 
-    ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-    scene.add(ambientLight);
-    scene.add(cameraLight);
+    ambientLight = null;
+    directionalLight = null;
+    spotLight = null;
+    hemiLight = null;
+    stars = null;
+    cameraLight = null;
+
+    scene.fog = null;
+
+    switch (mode) {
+        case 'day':
+            scene.background = new THREE.Color(0x87ceeb);
+            ambientLight = new THREE.AmbientLight(0x87cefa, 0.3);
+            if (mountainMesh) {
+                mountainMesh.material.color.set(0x44A682);
+                mountainMesh.material.opacity = 0.7;  
+            }
+            hemiLight = new THREE.HemisphereLight(0xffccaa, 0x3355aa, 0.4);
+
+            directionalLight = new THREE.DirectionalLight(0xffe57f, 0.5);
+            directionalLight.position.set(100, 100, -500);
+            directionalLight.castShadow = true;
+            spotLight = new THREE.SpotLight(0xFEA816, 1, 300, Math.PI / 5, 0.5, 1.2);
+            spotLight.castShadow = true;
+            spotLight.shadow.mapSize.set(2048, 2048);
+            spotLight.shadow.bias = -0.001;
+            spotLight.position.copy(camera.position).add(new THREE.Vector3(0, 2, 0)); 
+
+            const target1 = new THREE.Object3D();
+            scene.add(target1); // add to scene, not camera
+            spotLight.target = target1;
+
+            break;
+
+        case 'sunset':
+            scene.background = new THREE.Color(0x795B87);
+            scene.fog = new THREE.Fog(0xff9966, 100, 300);
+
+            spotLight = new THREE.SpotLight(0xDB1C1C, 3, 300, Math.PI / 5, 0.5, 1.2);
+            spotLight.castShadow = true;
+            spotLight.shadow.mapSize.set(2048, 2048);
+            spotLight.shadow.bias = -0.001;
+            spotLight.position.copy(camera.position).add(new THREE.Vector3(0, 2, 0));
+
+            const target = new THREE.Object3D();
+            scene.add(target);
+            spotLight.target = target;
+
+
+
+            ambientLight = new THREE.AmbientLight(0x111122, 0.1);
+            hemiLight = new THREE.HemisphereLight(0xffccaa, 0x3355aa, 0.4);
+
+            directionalLight = new THREE.DirectionalLight(0x224488, 0.2);
+            directionalLight.position.set(-50, 40, 50);
+            directionalLight.castShadow = false;
+
+            break;
+
+
+        case 'night':
+            scene.background = new THREE.Color(0x0b0d1a);
+            scene.fog = new THREE.Fog(0x0b0d1a, 50, 300); 
+
+            ambientLight = new THREE.AmbientLight(0x223366, 0.2);
+            directionalLight = new THREE.DirectionalLight(0x444466, 0.5);
+            directionalLight.position.set(0, 50, -50);
+            directionalLight.castShadow = true;
+
+            if (mountainMesh) {
+                mountainMesh.material.color.set(0x010015);
+                mountainMesh.material.opacity = 0.9;
+            }
+
+            addStars();
+            break;
+    }
+
+    // add active lights
+    if (ambientLight) scene.add(ambientLight);
+    if (directionalLight) scene.add(directionalLight);
+    if (spotLight) {
+        scene.add(spotLight);
+        scene.add(spotLight.target);
+    }
+    if (stars) scene.add(stars);
+    if (hemiLight) scene.add(hemiLight);
+    if (cameraLight) scene.add(cameraLight);
+    if (camera) scene.add(camera);
 }
+
+
+
+//let stars;
+
+function addStars() {
+    const starCount = 1000;
+    const starGeometry = new THREE.BufferGeometry();
+    const starPositions = [];
+
+    for (let i = 0; i < starCount; i++) {
+        const x = (Math.random() - 0.5) * 2000;
+        const y = Math.random() * 300 + 50;
+        const z = -Math.random() * 1000 - 300; // push stars far back (behind fog)
+        starPositions.push(x, y, z);
+    }
+
+    starGeometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(starPositions, 3)
+    );
+
+    const starMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 1,
+        sizeAttenuation: true,
+        fog: false,            // prevent fog from affecting the stars
+        depthTest: false       // always render on top
+    });
+
+    stars = new THREE.Points(starGeometry, starMaterial);
+    stars.renderOrder = -1;    // render before everything else
+
+    scene.add(stars);
+}
+
+
+
+
+
 
 function resizeScene() {
     const width = window.innerWidth;
@@ -155,7 +350,7 @@ function createBackgroundMountains() {
         depthWrite: false
     });
 
-    const mountainMesh = new THREE.Mesh(mountainGeo, mountainMat);
+    mountainMesh = new THREE.Mesh(mountainGeo, mountainMat);
     mountainMesh.position.set(0, -15, -250);
     mountainMesh.scale.set(10, 5, 1);
 

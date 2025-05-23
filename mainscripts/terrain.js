@@ -25,7 +25,6 @@ function createTerrain(scene) {
 function createTerrainChunk(xOffset, zOffset) {
     const geometry = new THREE.PlaneGeometry(terrainChunkSize, terrainChunkSize, terrainSegments, terrainSegments);
     geometry.rotateX(-Math.PI / 2);
-
     applyHeightMap(geometry, xOffset, zOffset);
 
     const material = new THREE.MeshStandardMaterial({
@@ -36,11 +35,20 @@ function createTerrainChunk(xOffset, zOffset) {
 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(xOffset, -15, zOffset);
-    addTreesToChunk(mesh, Math.floor(Math.random() * 4) + 2);
-    console.log("girl heeeelp");
+    mesh.receiveShadow = true;
+    mesh.castShadow = true;
+
+
+
+    // add trees and water
+    addTreesToChunk(mesh);
+    addWaterToChunk(mesh);
+    spawnObjectsForChunk(mesh);
+
+
     return mesh;
-    
 }
+
 
 function applyHeightMap(geometry, xOffset, zOffset) {
     const pos = geometry.attributes.position;
@@ -77,6 +85,8 @@ function updateTerrain(camera) {
 
             lastChunkZByStrip[xOffset] = newZ;
             addTreesToChunk(mesh, Math.floor(Math.random() * 4) + 2);
+            spawnObjectsForChunk(mesh);
+
 
         }
     }
