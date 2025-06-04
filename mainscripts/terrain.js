@@ -1,11 +1,28 @@
 const terrainChunks = [];
 const terrainChunkSize = 100;
-//const terrainSegments = 5; //low poly ness
 const chunkCount = 3;
-//const noiseScale = 0.1;
+noise.seed(Math.random());
 
-const stripOffsets = [-terrainChunkSize, 0, terrainChunkSize]; // left,middle,right
-const lastChunkZByStrip = {}
+const stripOffsets = [-terrainChunkSize, 0, terrainChunkSize]; // left, middle, right
+const lastChunkZByStrip = {};
+
+//hill setup
+const hills = [];
+
+function generateHills() {
+    const count = getHillFrequency();
+    hills.length = 0;
+    for (let i = 0; i < count; i++) {
+        hills.push({
+            x: (Math.random() - 0.5) * 1000,
+            z: (Math.random() - 0.5) * 1000,
+            radius: 20 + Math.random() * 40,
+            height: 15 + Math.random() * 10
+        });
+    }
+}
+
+generateHills();
 
 function createTerrain(scene) {
     for (let xOffset of stripOffsets) {
@@ -39,17 +56,12 @@ function createTerrainChunk(xOffset, zOffset) {
     mesh.receiveShadow = true;
     mesh.castShadow = true;
 
-
-
-    // add trees and water
     spawnObjectsForChunk(mesh);
     addTreesToChunk(mesh);
     addWaterToChunk(mesh);
 
-
     return mesh;
 }
-
 
 function applyHeightMap(geometry, xOffset, zOffset) {
     const pos = geometry.attributes.position;
@@ -64,13 +76,40 @@ function applyHeightMap(geometry, xOffset, zOffset) {
 }
 
 function generateHeight(x, z) {
-    const scale = getNoiseScale();
-    return (
-        Math.sin((x + z) * scale) * 2 +
-        Math.cos((x - z) * scale * 0.8) * 1.5
-    );
-}
+    const baseScale = getNoiseScale();
+    const offsetX = 9999;
+    const offsetZ = 8888;
 
+    let total = 0;
+    let amplitude = 10;
+    let frequency = 1;
+    let persistence = 0.5;
+    const octaves = 4;
+
+    for (let i = 0; i < octaves; i++) {
+        const nx = (x + offsetX) * baseScale * frequency;
+        const nz = (z + offsetZ) * baseScale * frequency;
+        total += noise.perlin2(nx, nz) * amplitude;
+
+        amplitude *= persistence;
+        frequency *= 2;
+    }
+
+    //hill contributions
+    for (const hill of hills) {
+        const dx = x - hill.x;
+        const dz = z - hill.z;
+        const distSq = dx * dx + dz * dz;
+        const radiusSq = hill.radius * hill.radius;
+
+        if (distSq < radiusSq) {
+            const falloff = 1 - distSq / radiusSq; //linear falloff
+            total += hill.height * Math.pow(falloff, 2); //radial bump
+        }
+    }
+
+    return total;
+}
 
 function updateTerrain(camera) {
     const cameraZ = camera.position.z;
@@ -89,8 +128,6 @@ function updateTerrain(camera) {
             lastChunkZByStrip[xOffset] = newZ;
             addTreesToChunk(mesh, Math.floor(Math.random() * 4) + 2);
             spawnObjectsForChunk(mesh);
-
-
         }
     }
 }
@@ -103,19 +140,23 @@ function getTerrainSegments() {
     const slider = document.getElementById('terpolySlider');
     return parseInt(slider.value);
 }
+function getHillFrequency() {
+    const slider = document.getElementById('hillSlider');
+    return parseInt(slider.value);
+}
 
 
 document.getElementById('noiseSlider').addEventListener('input', () => {
+    generateHills();
     terrainChunks.forEach(({ mesh, xOffset }) => {
         applyHeightMap(mesh.geometry, xOffset, mesh.position.z);
-
         spawnObjectsForChunk(mesh);
         addTreesToChunk(mesh, Math.floor(Math.random() * 4) + 2);
         addWaterToChunk(mesh);
-
     });
 });
 document.getElementById('terpolySlider').addEventListener('input', () => {
+    generateHills();
     const newSegments = getTerrainSegments();
 
     terrainChunks.forEach(({ mesh, xOffset }) => {
@@ -124,16 +165,27 @@ document.getElementById('terpolySlider').addEventListener('input', () => {
         applyHeightMap(newGeometry, xOffset, mesh.position.z);
 
         mesh.geometry.dispose();
-
         mesh.geometry = newGeometry;
 
         spawnObjectsForChunk(mesh);
         addTreesToChunk(mesh, Math.floor(Math.random() * 4) + 2);
         addWaterToChunk(mesh);
-
     });
 });
-
+document.getElementById('hillSlider').addEventListener('input', () => {
+    generateHills();
+    terrainChunks.forEach(({ mesh, xOffset }) => {
+        applyHeightMap(mesh.geometry, xOffset, mesh.position.z);
+        spawnObjectsForChunk(mesh);
+        addTreesToChunk(mesh, Math.floor(Math.random() * 4) + 2);
+        addWaterToChunk(mesh);
+    });
+});
+document.getElementById('houseSlider').addEventListener('input', () => {
+    terrainChunks.forEach(({ mesh }) => {
+        spawnObjectsForChunk(mesh);
+    });
+});
 
 
 window.createTerrain = createTerrain;

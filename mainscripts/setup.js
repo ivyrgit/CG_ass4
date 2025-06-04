@@ -65,7 +65,7 @@ function loadModels() {
         createBackgroundMountains();
     });
 
-    // load tree
+    //load tree
     loader.load('models/tree.ply', (geometry) => {
         geometry.computeVertexNormals();
 
@@ -136,6 +136,49 @@ function loadModels() {
         scaleVariation: 0.4
         });
     });
+    //load grass
+    loader.load('models/grass.ply', (geometry) => {
+        geometry.computeVertexNormals();
+        
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x44A682,
+            flatShading: true
+        });
+
+        registerObjectType('grass', geometry, material, {
+            count: { min: 50, max: 150 },
+            randomRotationY: true,
+            baseScale: 0.3,
+            scaleVariation: 0.3
+        });
+    });
+    //load house
+    loader.load('models/housereal.ply', (geometry) => {
+    geometry.computeVertexNormals();
+
+    if (geometry.hasAttribute('color')) {
+        geometry.getAttribute('color').normalized = true;
+
+        const material = new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            flatShading: true
+        });
+
+        registerObjectType('house', geometry, material, {
+            count: () => parseInt(document.getElementById('houseSlider').value),
+            randomRotationZ: true,
+            baseScale: 0.5,
+            yOffset: 1.5,
+            scaleVariation: 0.4
+        });
+
+        console.log('House model loaded and registered.');
+    } else {
+        console.warn('House model missing vertex color attribute.');
+    }
+});
+
+
 
 
 }
@@ -357,7 +400,6 @@ function createBackgroundMountains() {
     camera.add(mountainMesh);
 }
 
-// Export key pieces
 window.setScene = setScene;
 window.setLight = setLight;
 window.resizeScene = resizeScene;

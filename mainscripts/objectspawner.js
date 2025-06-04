@@ -42,9 +42,17 @@ function spawnObjectsForChunk(chunk) {
         if (!type.ready) continue;
         if (type.options.spawnChance && Math.random() > type.options.spawnChance) continue;
 
-        const count = type.options.count
-            ? getRandomInt(type.options.count.min, type.options.count.max)
-            : 3;
+        let count = 3; // default
+        const countOption = type.options.count;
+
+        if (typeof countOption === 'function') {
+            count = countOption();
+        } else if (typeof countOption === 'number') {
+            count = countOption;
+        } else if (countOption && typeof countOption === 'object' && countOption.min !== undefined && countOption.max !== undefined) {
+            count = getRandomInt(countOption.min, countOption.max);
+        }
+
 
         for (let i = 0; i < count; i++) {
             // edge-biased position
@@ -58,7 +66,7 @@ function spawnObjectsForChunk(chunk) {
 
             const rayOrigin = new THREE.Vector3(worldX, 100, worldZ);
             raycaster.set(rayOrigin, down);
-            const intersects = raycaster.intersectObjects(terrainMeshes, true);
+            const intersects = raycaster.intersectObjects(terrainMeshes, false);
 
             if (intersects.length > 0) {
                 const hit = intersects[0];

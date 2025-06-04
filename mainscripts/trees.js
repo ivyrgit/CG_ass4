@@ -11,10 +11,10 @@ function setTreeModel(geometry, material) {
 function addTreesToChunk(chunk) {
     if (!isTreeModelReady) return;
 
-    // update raycasting stuffs
+    //update raycasting stuffs
     chunk.updateMatrixWorld(true);
 
-    // Remove previous trees
+    //remove previous trees
     for (let i = chunk.children.length - 1; i >= 0; i--) {
         const child = chunk.children[i];
         if (child.isTree) {
@@ -66,6 +66,6 @@ function addTreesToChunk(chunk) {
 
 
 
-// Export globally
+//export globally
 window.setTreeModel = setTreeModel;
 window.addTreesToChunk = addTreesToChunk;
